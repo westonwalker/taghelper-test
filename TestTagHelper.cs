@@ -6,12 +6,13 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using System.Reflection;
 using System.Reflection.Emit;
+using WebApplication3.Views.Components;
 
 namespace WebApplication3
 {
-	[HtmlTargetElement("x-component", Attributes = "name")]
-	[HtmlTargetElement("x-component", Attributes = RouteValuesPrefix + "*")]
-	[HtmlTargetElement("x-component", Attributes = RouteValuesDictionaryName + "*")]
+	[HtmlTargetElement("*", Attributes = "name")]
+	[HtmlTargetElement("*", Attributes = RouteValuesPrefix + "*")]
+	[HtmlTargetElement("*", Attributes = RouteValuesDictionaryName + "*")]
 	public class TestTagHelper : TagHelper
 	{
 		[HtmlAttributeName("name")]
@@ -49,11 +50,16 @@ namespace WebApplication3
 			}
 		}
 
-		public override void Process(TagHelperContext context, TagHelperOutput output)
+		public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
 		{
+			var isComponent = context.TagName.StartsWith("x-");
+			if (!isComponent) return;
+			var childContent = await output.GetChildContentAsync();
 			// var renderedContent = HtmlHelper.Partial("~/Views/Shared/path/to/Template.cshtml");
 			(_html as IViewContextAware).Contextualize(ViewContext);
-			_html.RenderPartial("~/Views/Shared/TestComponent.cshtml");
+			var test = await _html.RenderComponentAsync<MainButton>(RenderMode.Static, new { Text = "testing" });
+			output.Content.SetHtmlContent(test);
+			//@(await Html.RenderComponentAsync<DevTeaser>(RenderMode.Static, new { Developers = Model.Developers }))
 			// output.Content.SetContent();
 			//var html = Generator.
 			//output.Content.SetContent();
